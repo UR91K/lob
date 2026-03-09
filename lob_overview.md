@@ -19,7 +19,7 @@ These are all reactive. They detect or repair violations. LOBNS is proactive —
 
 ## The Eight Invariants
 
-The kernel must enforce these eight invariants with no exceptions:
+The kernel must enforce these ten invariants with no exceptions:
 
 1. Every node has exactly one owner, or is explicitly unowned
 2. You cannot move a node while any Ref edge points to it
@@ -29,6 +29,8 @@ The kernel must enforce these eight invariants with no exceptions:
 6. Dropping an owner cascades to all owned nodes deterministically
 7. Weak edges never prevent deletion — `upgrade()` can return None
 8. A node's data cannot be mutated without a ref_mut lease
+9. A volatile node's data is never written to non-volatile storage under any circumstance
+10. Volatile status is inherited by all nodes owned by a volatile node and cannot be overridden by child nodes
 
 An invalid graph state is **unreachable**, not just unlikely. The store cannot become inconsistent the way ext4 can. The only threat is hardware failure mid-write, which the journal handles, and after journal recovery all invariants are restored.
 
@@ -72,6 +74,7 @@ pub struct Node {
     pub owner:               Option<NodeId>,  // None means unowned — persists indefinitely
     pub refcount:            u32,             // number of active Ref edges pointing here
     pub ref_mut:             bool,            // is an exclusive write lease active?
+    pub volatile:            bool,            // never written to non-volatile storage
     pub content_hash:        [u8; 32],        // BLAKE3, updated by kernel on every write
     pub created_at:          u64,             // unix timestamp, set once at creation
     pub modified_at:         u64,             // updated by kernel on every ref_mut write
@@ -603,10 +606,10 @@ Scheduler and context switching. The LOB shell querying the in-RAM node store. l
 The journal layer, crash-consistent writes to storage. On-disk node serialization. Boot from a persisted node store. Crash recovery tested exhaustively with fault injection.
 
 **Phase 4 — POSIX Compatibility**
-libposix, musl libc integration, ELF loader, dynamic linker. Enough syscall coverage to run simple C programs, progressing toward complex software.
+The node browser running natively on LOB. Native applications. Package manager. A complete self-hosting system.
 
 **Phase 5 — Native Userspace**
-The node browser running natively on LOB. Native applications. Package manager. A complete self-hosting system.
+libposix, musl libc integration, ELF loader, dynamic linker. Enough syscall coverage to run simple C programs, progressing toward complex software.
 
 ---
 
