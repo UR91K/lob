@@ -1,6 +1,6 @@
-Yes, that's exactly the right first step. It's the most valuable thing you can do before touching bare metal, and it's achievable during college in spare time.
+# Initial development plan
 
-## What You're Actually Building
+## What I Am Actually Building
 
 Two separate projects that can live in the same repo:
 
@@ -46,11 +46,11 @@ The node browser built on top of the library serves multiple purposes simultaneo
 
 - Proves the query API is actually ergonomic to use
 - Surfaces API design mistakes early, before they're carved into a kernel syscall interface
-- Gives you something visual and demonstrable
+- Gives I something visual and demonstrable
 - Tests the index performance with realistic node counts — load 3.7 million synthetic nodes and see if queries feel instant
 - Is genuinely useful as a standalone tool even before LOB the OS exists
 
-For the UI layer, your existing experience with egui makes this a natural fit. egui is immediate mode, straightforward for this kind of tool, and you already know it. The graph view can use something like `egui_graphs` or you can roll a basic force-directed layout yourself with `wgpu` given your experience there.
+For the UI layer, your existing experience with egui makes this a natural fit. egui is immediate mode, straightforward for this kind of tool, and I already know it. The graph view can use something like `egui_graphs` or I can roll a basic force-directed layout yourself with `wgpu` given your experience there.
 
 ## The Immediate Milestones
 
@@ -84,18 +84,18 @@ Later:      Sidebar views
             Persistence / journal (optional at this stage)
 ```
 
-Each milestone is a natural stopping point if college gets busy. The library is useful and correct at every step even if you pause for a month.
+Each milestone is a natural stopping point if college gets busy. The library is useful and correct at every step even if I pause for a month.
 
 ## The Concrete Value of This Approach
 
-When you eventually sit down to write the kernel, you will have:
+When I eventually sit down to write the kernel, I will have:
 
-- A proven correct node store you can drop in directly
+- A proven correct node store I can drop in directly
 - An API you've actually used and refined through building the browser
 - Performance characteristics you've measured at realistic scale
-- A test suite that will immediately tell you if porting to bare metal breaks anything
-- Something you can show people — a working node browser is a much more compelling demonstration of the concept than a bootloader
+- A test suite that will immediately tell me if porting to bare metal breaks anything
+- Something I can show people: a working node browser is a much more compelling demonstration of the concept than a bootloader
 
-The kernel becomes an exercise in wrapping a library you already trust, rather than building everything from scratch in the most hostile possible environment.
+The kernel becomes an exercise in wrapping a library I already trust, rather than building everything from scratch in the most hostile possible environment.
 
-And practically speaking — a Rust library with a UI on top is exactly the kind of project you can work on for 30 minutes between lectures. The bare metal work needs longer focused sessions. This fits your current life better.
+And practically speaking, a Rust library with a UI on top is exactly the kind of project I can work on for 30 minutes between lectures. The bare metal work needs longer focused sessions. This fits your current life better.
