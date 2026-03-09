@@ -238,8 +238,8 @@ Everything currently running is part of a single ownership tree rooted at the in
 [init process]
   └──own──► [session]
                 ├──own──► [process: browser]
-                │              ├──own──► [tab: gmail]       ← ephemeral
-                │              └──own──► [scratch buffer]   ← ephemeral
+                │              └─own──► [tab: gmail]       ← ephemeral
+                │ 
                 │
                 └──own──► [process: editor]
                                └──own──► [unsaved buffer]   ← ephemeral
@@ -256,7 +256,7 @@ Free-floating unowned nodes (the vast majority):
 
 [firefox binary]    type:executable  package:firefox
 [firefox profile]   type:app_data    app:firefox      user:alice
-[notes.txt]         type:text        user:alice        tag:work
+[notes]             type:utf8        user:alice        tag:work
 [network config]    type:config      scope:system
 [bookmark: github]  type:bookmark    app:firefox       user:alice
 
@@ -312,6 +312,69 @@ query created_by_binary:[firefox-binary-node-id]
 // Everything alice has ever created
 query created_by_user:alice
 ```
+
+---
+
+## Process-Binary Relationships
+
+When a process is created from a binary, three relationships are established:
+
+1. **Ownership** — The parent process owns the child process (for lifetime control)
+2. **Ref edge** — The child process holds a Ref to the binary (prevents deletion while running)
+3. **Weak provenance** — The `created_by_binary` field records which binary created the process (for auditing)
+
+```rust
+// When exec() is called
+fn exec(binary: NodeId) -> Result<ProcessId> {
+    let process = liblob::create()
+        .attr("type", "process")
+        .owner(current_process_id)  // parent owns child
+        .build()?;
+    
+    // Hold a Ref to the binary (prevents deletion)
+    liblob::make_ref(binary, process)?;
+    
+    // Stamp provenance (weak link, doesn't affect lifetime)
+    kernel::stamp_provenance(process, binary, current_user)?;
+    
+    // Load and execute...
+    Ok(process)
+}
+```
+
+### Deleting a Running Binary
+
+Because running processes hold Ref edges to their binaries, you cannot delete a binary while it is running:
+
+```rust
+[firefox binary]
+  owner: [firefox package]
+  refcount: 3               // three running instances
+
+[process: firefox instance 1]
+  owner: [session]
+  ──ref──► [firefox binary]  // holds a Ref to the binary
+
+// Attempt to uninstall firefox package
+store.drop_node(firefox_package)?;
+// ERROR: Cannot drop package because firefox binary has refcount > 0
+```
+
+The deletion fails because **you cannot drop a node while any Ref edge points to it** (Invariant 2). This is simpler and more predictable than Linux's behavior, where you can unlink a file while it's in use, leaving it in a "deleted but still exists" state.
+
+When all firefox processes exit, they drop their Refs to the binary. The refcount reaches zero, and the package can then be uninstalled successfully.
+
+### Comparison with Linux
+
+| Scenario | Linux | LOB |
+|---|---|---|
+| Delete binary while running | Succeeds (unlink), binary data persists | Fails (refcount > 0) |
+| Process keeps running | Yes | Yes (deletion blocked) |
+| Binary data freed | When last process exits | When last Ref dropped |
+| Can reinstall same binary | Yes (different inode) | No (node still exists) |
+| Semantic clarity | Confusing (file "deleted" but exists) | Clear (deletion fails with reason) |
+
+LOB's approach is more explicit: you cannot delete what's in use. The error message tells you exactly which processes are holding Refs to the binary, making it clear why the deletion failed.
 
 ---
 
