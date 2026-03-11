@@ -1,21 +1,23 @@
 # LOB Operating System
 
-LOB (Lifetime, Own, Borrow) is an operating system built around the idea of replacing the traditional POSIX/NT style filesystem with a node store called **LOBNS** (LOB Node Store). Instead of files and directories, there are nodes with relationships (edges). The node store spans memory and disk transparently for persistent data — whether a node is currently in RAM or on disk is an implementation detail, not a semantic distinction.
+LOB (Lifetime, Own, Borrow) is an operating system built around a single insight: the problems that make filesystems unreliable are the same problems that make memory unsafe, and they have the same solution.
 
-Nodes follow Rust's ownership, lifetimes, and borrowing rules, enforced by the kernel at every syscall boundary.
+Instead of files and directories, LOB manages **nodes**. The node is a uniform primitives that span memory and disk transparently. Whether a node is currently in RAM or on disk is an implementation detail, not a semantic distinction. Nodes are connected by typed edges that encode ownership, reference, and provenance relationships. This graph — memory and storage unified — is the system. There is no separate filesystem, process table, or package database. Everything is a node.
 
 ---
 
 ## The Problem With Conventional Filesystems
 
-Rust's ownership system was designed to solve a specific problem — you cannot have both aliasing (multiple references to the same thing) and mutation (changing the thing) simultaneously. Filesystems have exactly the same problem and have never formally solved it. Instead they bolt on reactive measures:
+The aliasing-mutation problem is well understood in programming language theory: you cannot safely have both multiple references to a resource and the ability to mutate it simultaneously. Modern type systems solve this structurally by making invalid states unrepresentable, instead of just unlikely.
+
+Filesystems have always had the same problem and have never formally solved it. Instead they accumulate reactive measures:
 
 - **File locking** — advisory, often ignored
 - **Permissions** — coarse, do not express aliasing
 - **Journaling** — repairs corruption after the fact
 - **fsck** — detects invariant violations after they have already happened
 
-These are all reactive. They detect or repair violations. LOBNS is proactive — the invariants cannot be violated because the kernel structurally prevents it, the same way rustc prevents memory unsafety.
+These mechanisms detect or repair violations, while LOBNS prevents them from happening in the first place. The kernel enforces ownership and borrowing invariants at every syscall boundary, which makes an invalid graph state is structurally unreachable, not just unlikely.
 
 ---
 
@@ -174,9 +176,13 @@ See [libposix.md](libposix.md) for the translation layer.
 
 ---
 
-## Project Status
+## Implementation
 
-LOB is currently in Phase 0 — proof of concept on Linux/Windows. The LOBNS node store is implemented as a pure `no_std` Rust library with comprehensive testing (property-based fuzzing, fault injection, 100% branch coverage). A node browser and CLI tool are under development.
+LOB is implemented in Rust because its type system is isomorphic to the ownership semantics the kernel enforces. Using anything else would mean reimplementing a worse version of that type system before the actual work could begin.
+
+LOB is currently in Phase 0 (proof of concept on Linux/Windows.) The LOBNS node store is implemented as a pure `no_std` library with exhaustive testing (property-based fuzzing, fault injection, 100% branch coverage).
+
+Under active development: node browser, lob-shell
 
 See [implementation.md](implementation.md) for the full roadmap.
 
