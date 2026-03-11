@@ -13,7 +13,7 @@ pub struct Node {
     // Kernel-enforced — application cannot set or modify these
     // The kernel stamps and maintains these fields exclusively
     pub id:                  NodeId,          // u64, unique, never reused, never zero
-    pub owner:               Option<NodeId>,  // None means unowned — persists indefinitely
+    pub owner:               Option<NodeId>,  // None means unowned — self and children persist indefinitely
     pub refcount:            u32,             // number of active Ref edges pointing here
     pub ref_mut:             bool,            // is an exclusive write lease active?
     pub content_hash:        [u8; 32],        // BLAKE3, updated by kernel on every write
