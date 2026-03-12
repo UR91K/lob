@@ -126,7 +126,7 @@ LOB provides three tiers of memory:
 
 **Persistent Nodes** — Nodes owned by unowned entities or unowned themselves. Journaled to disk, survive reboots, persist indefinitely.
 
-See [node_store.md](node_store.md) for details.
+See [node_store.md](docs/node_store.md) for details.
 
 ---
 
@@ -144,7 +144,7 @@ See [node_store.md](node_store.md) for details.
 
 **Capability-based security** — Access control is structural. A process cannot access nodes it has no edges to.
 
-See [security.md](security.md) for the full security model.
+See [security.md](docs/security.md) for the full security model.
 
 ---
 
@@ -152,7 +152,7 @@ See [security.md](security.md) for the full security model.
 
 The primary interface is a flat node browser with no directory tree — only a search bar and saved views. A second tab renders the same data as a visual graph showing ownership islands, relationships, and provenance chains.
 
-See [user_experience.md](user_experience.md) for details.
+See [user_experience.md](docs/user_experience.md) for details.
 
 ---
 
@@ -160,19 +160,19 @@ See [user_experience.md](user_experience.md) for details.
 
 LOB ships `libposix`, a userspace library that translates POSIX calls into LOBNS operations. Legacy programs compiled against `musl` and `libposix` run without modification. The kernel does not know or care about POSIX.
 
-See [libposix.md](libposix.md) for the translation layer.
+See [libposix.md](docs/libposix.md) for the translation layer.
 
 ---
 
 ## Documentation
 
-- [node_store.md](node_store.md) — Node and edge definitions, syscall API, memory model, journaling
-- [security.md](security.md) — Access control, sandboxing, provenance, resource limits
-- [user_experience.md](user_experience.md) — Node browser, query language, graph visualization
-- [libposix.md](libposix.md) — POSIX compatibility layer
-- [reproducibility.md](reproducibility.md) — Content addressing, lockfiles, hermetic builds
-- [implementation.md](implementation.md) — Testing strategy, development phases, project structure
-- [lob_overview.md](lob_overview.md) — Original comprehensive document
+- [node_store.md](docs/node_store.md) — Node and edge definitions, syscall API, memory model, journaling
+- [security.md](docs/security.md) — Access control, sandboxing, provenance, resource limits
+- [user_experience.md](docs/user_experience.md) — Node browser, query language, graph visualization
+- [libposix.md](docs/libposix.md) — POSIX compatibility layer
+- [reproducibility.md](docs/reproducibility.md) — Content addressing, lockfiles, hermetic builds
+- [implementation.md](docs/implementation.md) — Testing strategy, development phases, project structure
+- [lob_overview.md](docs/lob_overview.md) — Original comprehensive document
 
 ---
 
@@ -184,7 +184,7 @@ LOB is currently in Phase 0 (proof of concept on Linux/Windows.) The LOBNS node 
 
 Under active development: node browser, lob-shell
 
-See [implementation.md](implementation.md) for the full roadmap.
+See [implementation.md](docs/implementation.md) for the full roadmap.
 
 ---
 

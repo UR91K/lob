@@ -12,20 +12,21 @@ Every entity in the system is a node. The struct is split into two clearly separ
 pub struct Node {
     // Kernel-enforced — application cannot set or modify these
     // The kernel stamps and maintains these fields exclusively
-    pub id:                  NodeId,          // u64, unique, never reused, never zero
-    pub owner:               Option<NodeId>,  // None means unowned — self and children persist indefinitely
-    pub refcount:            u32,             // number of active Ref edges pointing here
-    pub ref_mut:             bool,            // is an exclusive write lease active?
-    pub content_hash:        [u8; 32],        // BLAKE3, updated by kernel on every write
-    pub created_at:          u64,             // unix timestamp, set once at creation
-    pub modified_at:         u64,             // updated by kernel on every ref_mut write
-    pub accessed_at:         u64,             // updated by kernel on every ref
-    pub created_by_process:  Option<NodeId>,  // weak — specific process instance, may tombstone
-    pub created_by_binary:   Option<NodeId>,  // weak — the binary node, survives process death
-    pub created_by_session:  u64,             // session ID scalar, recorded at creation
-    pub created_by_user:     UserId,          // never None, always stamped from session context
+    pub id:                  NodeId,           // u64, unique, never reused, never zero
+    pub owner:               Option<NodeId>,   // None means unowned — self and children persist indefinitely
+    pub refcount:            u32,              // number of active Ref edges pointing here
+    pub ref_mut:             bool,             // is an exclusive write lease active?
+    pub content_hash:        [u8; 32],         // BLAKE3, updated by kernel on every write
+    pub created_at:          u64,              // unix timestamp, set once at creation
+    pub modified_at:         u64,              // updated by kernel on every ref_mut write
+    pub accessed_at:         u64,              // updated by kernel on every ref
+    pub created_by_process:  Option<NodeId>,   // weak — specific process instance, may tombstone
+    pub created_by_binary:   Option<NodeId>,   // weak — the binary node, survives process death
+    pub created_by_session:  u64,              // session ID scalar, recorded at creation
+    pub created_by_user:     UserId,           // never None, always stamped from session context
     pub signature:           Option<[u8; 64]>, // Ed25519 signature over content_hash
     pub signing_key:         Option<[u8; 32]>, // public key of signer
+    pub is_journal_entry:    bool,             // exempt from journaling and normal drop/write syscalls
 
     // Application-owned — kernel is completely indifferent to these
     pub edges:  Vec<Edge>,

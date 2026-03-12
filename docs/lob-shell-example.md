@@ -1,6 +1,6 @@
 # LOB Shell Design
 
-The LOB shell (lob-shell) is a query-first interface to the node store. There is no "current directory" - instead, commands operate on query results, node IDs, or the entire system.
+The LOB shell (lob-shell) is a query-first interface to the node store. There is no "current directory" - instead, commands operate on query results, node IDs, or the entire system. When a query is made, the last query is stored as the current context (similar to being in a directory) and the list numbers are resolved to actual ids when referenced. 
 
 ---
 
@@ -24,8 +24,8 @@ The `query` or `qr` command queries the entire system for matching nodes.
 ```
 --id -i <node-id>                    Query by exact node ID
 --owner-id -o <node-id>              Nodes owned by this node
---reference-from-id -r <node-id>     Nodes with Ref edge from this node
---weak-from-id -w <node-id>          Nodes with Weak edge from this node
+--reference-from-id -r @<id/name>    Nodes with Ref edge from this node
+--weak-from-id -w @<id/name>         Nodes with Weak edge from this node
 
 --size -s <size-spec>                Data size: '1KB', '1-4KB', '8MB', '12-14GB', '1KB-14MB'
 --reference-count -rc <count>        Nodes with exactly this refcount
@@ -35,8 +35,8 @@ The `query` or `qr` command queries the entire system for matching nodes.
 --modified -m <date/range>           Modification timestamp  
 --accessed -ac <date/range>          Access timestamp
 
---process -p <node-id>               Created by this process instance
---binary -b <node-id>                Created by this binary
+--process -p @<id/name>              Created by this process instance
+--binary -b @<id/name>               Created by this binary
 --user -u <username>                 Created by this user
 
 --attributes -a <key:value,...>      Match attributes (type:document, name:draft, etc)
@@ -128,6 +128,149 @@ alice (lobbox1) >> qr -a type:document,tag:work -m 7d -s '<100KB'
 
 ---
 
+Here's the section:
+
+---
+
+## Name Resolution
+
+The `@` prefix references a node directly. It can be used with a numeric ID or a name:
+
+| Syntax | Meaning |
+|--------|---------|
+| `@12844` | exact node ID reference |
+| `@firefox` | resolve by `name` attribute |
+| `@firefox:package` | resolve by `name` and `type` attributes |
+
+Name resolution is unambiguous when exactly one node matches. If multiple nodes share a name, the shell presents an inline disambiguation prompt using the standard numbered list format:
+
+```shell
+alice (lobbox1) >> drop @firefox
+Error: @firefox is ambiguous - 3 nodes match name:firefox
+1 @8291 firefox-bin | executable
+2 @7819 firefox     | package
+3 @9285 firefox     | process
+Which would you like to drop? >> 2
+Will drop owned nodes: 9285, 8291, 11299, 880, 881, 12850, 12840
+Drop node 7819 (firefox)? [y/N] y
+Dropped nodes: 7819, 9285, 8291, 11299, 880, 881, 12850, 12840
+```
+
+The type hint syntax narrows resolution before prompting:
+
+```shell
+# unambiguous - only one package named firefox
+alice (lobbox1) >> drop @firefox:package
+Will drop owned nodes: 9285, 8291, 11299, 880, 881, 12850, 12840
+Drop node 7819 (firefox)? [y/N] y
+Dropped nodes: 7819, 9285, 8291, 11299, 880, 881, 12850, 12840
+
+# still ambiguous - two processes named vim
+alice (lobbox1) >> show @vim:process
+Error: @vim:process is ambiguous - 2 nodes match name:vim, type:process
+1 @9284 vim  | process | cr 2h
+2 @9291 vim  | process | cr 4h
+Which would you like to show? >> 1
+```
+
+The disambiguation prompt sets the context node, so `lqr` operates on the resolved result afterward. Any command that accepts a `@name` reference uses this same resolution behavior — it is not specific to any individual command.
+
+---
+
+## Query Chaining and Graph Traversal
+
+### `lqr` - Local Query
+
+`lqr` is identical to `qr` but operates only on the current context — the result set of the last query. Returns an error if no context exists.
+
+```shell
+alice (lobbox1) >> lqr -a type:document
+Error: No context - run a query first
+
+# find all documents in alice's nodes
+alice (lobbox1) >> qr -u alice
+1 draft  | document utf8 markdown | 2.4KB
+2 notes  | document utf8 markdown | 8.1KB
+3 vim    | process                 | cr 2h
+4 config | config utf8 toml       | 892B
+
+alice (lobbox1) >> lqr -a type:document
+1 draft | document utf8 markdown | 2.4KB
+2 notes | document utf8 markdown | 8.1KB
+```
+
+### Traversal Operators
+
+Traversal operators walk edges from the current result set. They use the same edge abbreviations as `qr` flags: `o` (own), `r` (ref), `w` (weak).
+
+| Operator | Meaning |
+|----------|---------|
+| `.o` | replace result set with nodes owned by current set (one hop) |
+| `.r` | replace result set with nodes referenced by current set (one hop) |
+| `.w` | replace result set with nodes weakly referenced by current set (one hop) |
+| `.o+` | replace result set with full ownership subtree (one or more hops) |
+| `.o*` | replace result set with full ownership subtree including current set |
+
+Set operators combine the current result set with the traversal result:
+
+| Operator | Meaning |
+|----------|---------|
+| `\|.o` | union — add owned children to current set |
+| `&.o` | intersection — keep only nodes that own something |
+| `-.o` | difference — remove nodes that own something |
+
+Traversal operators are appended to any command that produces a result set:
+
+```shell
+# nodes owned by alice's nodes
+alice (lobbox1) >> qr -u alice .o
+
+# alice's nodes plus their entire ownership subtree
+alice (lobbox1) >> qr -u alice |.o+
+
+# only alice's nodes that own something
+alice (lobbox1) >> qr -u alice &.o
+
+# all documents anywhere in firefox's ownership tree
+alice (lobbox1) >> qr -b @firefox |.o+
+alice (lobbox1) >> lqr -a type:document
+
+# find all nodes that reference something in alice's tree
+alice (lobbox1) >> qr -u alice |.o+
+alice (lobbox1) >> lqr &.r
+
+# walk two ownership levels then find anything with an active ref
+alice (lobbox1) >> qr -u alice .o .o &.r
+
+# find nodes created by bob anywhere in alice's ownership tree
+alice (lobbox1) >> qr -u alice |.o+
+alice (lobbox1) >> lqr -u bob
+```
+
+### Inline Chaining with `|`
+
+Multiple `lqr` operations can be chained on one line using `|`. The `|` operator passes the current result set to the next set of flags, implicitly scoping them as `lqr`:
+
+```shell
+# equivalent to the two-line version above
+alice (lobbox1) >> qr -u alice |.o+ | -u bob
+
+# find all documents modified this week in firefox's ownership tree
+alice (lobbox1) >> qr -b @firefox |.o+ | -a type:document | -m 7d
+
+# find all nodes owned by running processes except documents
+alice (lobbox1) >> qr -a type:process &.o | -.a type:document
+
+# find everything bob created inside alice's subtree, then walk their weak refs
+alice (lobbox1) >> qr -u alice |.o+ | -u bob .w+
+
+# find orphaned nodes - weakly referenced but not in any active ownership tree
+alice (lobbox1) >> qr -iu |.o+
+alice (lobbox1) >> lqr &.w -.o
+```
+
+---
+
 ## Syscall Commands
 
 The shell exposes most of the LOBNS syscall API directly as commands:
@@ -182,6 +325,40 @@ alice (lobbox1) >> modified
 2 config | config utf8 toml       | 892B  | 6h ago
 ```
 
+### `procs`
+
+Alias for `qr -a type:process`
+
+```shell
+# Show all running processes
+alice (lobbox1) >> procs
+1 vim            | process | rc:1 | started 2h ago
+2 firefox        | process | rc:3 | started 4h ago
+3 lob-shell      | process | rc:0 | started 6h ago
+
+# With canonical IDs
+alice (lobbox1) >> procs -sid
+1 vim@9284       | process | rc:1 | started 2h ago
+2 firefox@9285   | process | rc:3 | started 4h ago
+3 lob-shell@9286 | process | rc:0 | started 6h ago
+
+# Terminate a process (just drop)
+alice (lobbox1) >> drop 2
+Will drop owned nodes from 9285: 11203, 11204, 11205
+Drop node 9285 (firefox)? [y/N] y
+Dropped nodes: 9285, 11203, 11204, 11205
+
+# Find processes created by a binary
+alice (lobbox1) >> procs | qr -b @8291
+1 vim@9284 | process | rc:1 | started 2h ago
+
+# Find all nodes owned by a running process
+alice (lobbox1) >> qr -o @9285
+1 tab-1   | document utf8 html | 124KB | cr 4h
+2 tab-2   | document utf8 html | 89KB  | cr 3h
+3 cache   | database binary    | 2.1MB | cr 4h
+```
+
 ---
 
 ## Working with Query Results
@@ -222,34 +399,6 @@ alice (lobbox1) >> show @12844
 Node ID: 12844
 Owner: @9281 (alice-session)
 ...
-```
-
-### `attr` - Show/Set Attributes
-
-```shell
-# Show all attributes (key: value list)
-alice (lobbox1) >> attr 1
-type: document
-data: utf8
-format: markdown
-name: draft
-tag: work
-
-# Show specific attribute
-alice (lobbox1) >> attr 1 name
-draft
-
-# Set attribute
-alice (lobbox1) >> attr 1 tag:urgent
-Set tag=urgent on node 12844
-
-# Set multiple
-alice (lobbox1) >> attr 1 tag:urgent,priority:high
-Set tag=urgent, priority=high on node 12844
-
-# Remove attribute
-alice (lobbox1) >> attr 1 tag:
-Removed tag from node 12844
 ```
 
 ### `dump` - Display Node Data (Read-Only)
@@ -304,7 +453,7 @@ alice (lobbox1) >> drop -f 2
 Dropped node 12845
 
 # Drop multiple (shows cascade for each)
-alice (lobbox1) >> drop 1,2,3
+alice (lobbox1) >> drop 1 2 3
 Will drop owned nodes from 12844: 11299, 880, 881
 Will drop owned nodes from 12845: (none)
 Will drop owned nodes from 12846: 9281, 9282
@@ -320,7 +469,7 @@ Dropped nodes: 12844, 11299, 880, 881, 12850, 12840
 # Error if refcount > 0
 alice (lobbox1) >> drop 1
 Error: Cannot drop node 12844 - refcount is 2
-Referenced by: @9281, @12903
+Referenced by: 9281, 12903
 ```
 
 ---
@@ -330,24 +479,9 @@ Referenced by: @9281, @12903
 ### `new` - Create New Node
 
 ```shell
-alice (lobbox1) >> new
-type: document
-name: todo.txt
-owner [self/unowned/@id]: self
-data [file/stdin/empty]: stdin
-# Type content, Ctrl-D to finish
-- Buy groceries
-- Write documentation
-^D
-Created node 12848
-
-# Non-interactive
-alice (lobbox1) >> new -a type:document,name:todo.txt -o self -d "Task list"
+# creates node with data:utf8 by default
+alice (lobbox1) >> new -a name:todo
 Created node 12849
-
-# From file
-alice (lobbox1) >> new -a type:image,name:photo.jpg -o unowned -f /tmp/photo.jpg
-Created node 12850
 ```
 
 ### `clone` - Duplicate Node (Memory Management Semantics)
@@ -355,7 +489,7 @@ Created node 12850
 Clone creates a duplicate node with a new ID and assigns ownership. This matches Rust's `clone()` semantics - duplicate the data and assign it to a new owner.
 
 ```shell
-# Clone node 1, new unowned(persistent)
+# Clone node 1, unowned (persistent)
 alice (lobbox1) >> clone 1 unowned
 Created node 12851 (clone of 12844, unowned)
 
@@ -374,24 +508,6 @@ Created node 12853 (clone of @1392, owned by @1235)
 # Clone with single argument - same owner as original
 alice (lobbox1) >> clone 1
 Created node 12854 (clone of 12844, owned by @9281)
-```
-
-### `dup` - Interactive Duplicate with Attribute Changes
-
-Dup is for interactive duplication with the ability to modify attributes.
-
-```shell
-# Interactive duplicate
-alice (lobbox1) >> dup 1
-Duplicate node 12844 (draft)?
-new owner [same/self/unowned/@id]: unowned
-new name [draft-copy]: backup
-modify other attributes? [y/N]: n
-Created node 12851
-
-# Non-interactive with attribute overrides
-alice (lobbox1) >> dup 1 -o unowned -a name:backup,tag:archive
-Created node 12851
 ```
 
 ---
@@ -571,11 +687,11 @@ Removed tag from node 12844
 
 ```shell
 # Add tags
-alice (lobbox1) >> tag work 1,2,3
+alice (lobbox1) >> tag work 1 2 3
 Tagged nodes 12844, 12848, 12849 with 'work'
 
 # Remove tags
-alice (lobbox1) >> untag work 1,2
+alice (lobbox1) >> untag work 1 2
 Removed tag 'work' from nodes 12844, 12848
 
 # Query by tag
@@ -611,42 +727,6 @@ Package @7819 (vim-package)
   created_at: 2024-02-15 09:12:40
 ```
 
-### `by` - Query by Creator
-
-```shell
-# Everything created by vim
-alice (lobbox1) >> by vim
-# Resolves 'vim' to binary node, queries created_by_binary
-
-1 draft          | document [utf8] | 2.4KB
-2 notes          | document [utf8] | 8.1KB
-3 config         | text [utf8]     | 892B
-
-# By specific binary node
-alice (lobbox1) >> by @8291
-1 draft          | document [utf8] | 2.4KB
-2 notes          | document [utf8] | 8.1KB
-```
-
----
-
-## Graph Visualization
-
-### `graph` - Show Subgraph
-
-```shell
-alice (lobbox1) >> graph 1
-# Opens visual graph view centered on node 12847
-# Shows ownership tree, ref edges, weak edges
-# Color-coded by edge type
-
-alice (lobbox1) >> graph 1 --depth 2
-# Limits traversal depth
-
-alice (lobbox1) >> graph 1 --type own
-# Shows only ownership edges
-```
-
 ---
 
 ## Piping and Composition
@@ -667,41 +747,13 @@ alice (lobbox1) >> qr -a type:document -m '<90d' | attr archived:true
 
 ---
 
-## Session and Process Management
-
-### `ps` - List Processes
-
-```shell
-alice (lobbox1) >> ps
-PID   Binary          Owner           Refcount  Created
-9284  vim             @9281 (session) 1         2h ago
-9285  firefox         @9281 (session) 3         4h ago
-9286  lob-shell       @9281 (session) 0         6h ago
-
-alice (lobbox1) >> ps -a
-# Show all users' processes (requires permission)
-```
-
-### `kill` - Terminate Process
-
-```shell
-alice (lobbox1) >> kill 9284
-Terminate process 9284 (vim)? [y/N] y
-Process 9284 terminated
-
-alice (lobbox1) >> kill -9 @9284
-# Force kill
-```
-
----
-
 ## Package Management
 
 ### `plob` - Package Operations
 
 ```shell
 # List installed packages
-alice (lobbox1) >> plop list
+alice (lobbox1) >> plob list
 1 firefox        | 89.2MB  | installed 30d ago
 2 vim            | 12.4MB  | installed 45d ago
 3 rust-toolchain | 234MB   | installed 60d ago
