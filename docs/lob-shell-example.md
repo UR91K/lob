@@ -173,7 +173,7 @@ Error: @vim:process is ambiguous - 2 nodes match name:vim, type:process
 Which would you like to show? >> 1
 ```
 
-The disambiguation prompt sets the context node, so `lqr` operates on the resolved result afterward. Any command that accepts a `@name` reference uses this same resolution behavior — it is not specific to any individual command.
+The disambiguation prompt sets the context node, so `lqr` operates on the resolved result afterward. Any command that accepts a `@name` reference uses this same resolution behavior - it is not specific to any individual command.
 
 ---
 
@@ -181,7 +181,7 @@ The disambiguation prompt sets the context node, so `lqr` operates on the resolv
 
 ### `lqr` - Local Query
 
-`lqr` is identical to `qr` but operates only on the current context — the result set of the last query. Returns an error if no context exists.
+`lqr` is identical to `qr` but operates only on the current context - the result set of the last query. Returns an error if no context exists.
 
 ```shell
 alice (lobbox1) >> lqr -a type:document
@@ -215,9 +215,9 @@ Set operators combine the current result set with the traversal result:
 
 | Operator | Meaning |
 |----------|---------|
-| `\|.o` | union — add owned children to current set |
-| `&.o` | intersection — keep only nodes that own something |
-| `-.o` | difference — remove nodes that own something |
+| `\|.o` | union - add owned children to current set |
+| `&.o` | intersection - keep only nodes that own something |
+| `-.o` | difference - remove nodes that own something |
 
 Traversal operators are appended to any command that produces a result set:
 

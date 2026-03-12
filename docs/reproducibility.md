@@ -1,12 +1,12 @@
 # Reproducibility
 
-LOBNS makes reproducible builds and environments a natural consequence of the data model. Content addressing, lockfiles, and hermetic builds are not bolted-on features — they emerge directly from the ownership graph and provenance tracking.
+LOBNS makes reproducible builds and environments a natural consequence of the data model. Content addressing, lockfiles, and hermetic builds are not bolted-on features - they emerge directly from the ownership graph and provenance tracking.
 
 ---
 
 ## Content Addressing
 
-Every node carries a `content_hash` — a BLAKE3 hash of its data, attributes, and the content hashes of all owned children recursively, like Git trees.
+Every node carries a `content_hash` - a BLAKE3 hash of its data, attributes, and the content hashes of all owned children recursively, like Git trees.
 
 ```rust
 pub content_hash: [u8; 32],  // BLAKE3, updated by kernel on every write
@@ -103,13 +103,13 @@ fn verify_lockfile(env: NodeId, lockfile: &Lockfile) -> Result<bool> {
 }
 ```
 
-The lockfile is trivially derived from the graph and always complete by construction. There is no separate lockfile format to maintain — it is just a serialized subset of the node store.
+The lockfile is trivially derived from the graph and always complete by construction. There is no separate lockfile format to maintain - it is just a serialized subset of the node store.
 
 ---
 
 ## Hermetic Builds
 
-When a build process starts, the kernel gives it Ref edges to declared dependencies and Own edges to output nodes. It cannot access anything else — those nodes are not reachable from its process node.
+When a build process starts, the kernel gives it Ref edges to declared dependencies and Own edges to output nodes. It cannot access anything else - those nodes are not reachable from its process node.
 
 ```rust
 fn hermetic_build(deps: &[NodeId], build_script: NodeId) -> Result<NodeId> {
@@ -141,13 +141,13 @@ fn hermetic_build(deps: &[NodeId], build_script: NodeId) -> Result<NodeId> {
 }
 ```
 
-Build hermeticity is a structural property of the access model. The build process cannot access network, cannot read user files, cannot see anything not explicitly granted. This is not enforced by a build tool — it is enforced by the kernel.
+Build hermeticity is a structural property of the access model. The build process cannot access network, cannot read user files, cannot see anything not explicitly granted. This is not enforced by a build tool - it is enforced by the kernel.
 
 ---
 
 ## Garbage Collection
 
-An unowned node with refcount zero is unreachable by definition and can be collected immediately. There is no separate GC pass and no store to scan — unreachability is already encoded in the graph.
+An unowned node with refcount zero is unreachable by definition and can be collected immediately. There is no separate GC pass and no store to scan - unreachability is already encoded in the graph.
 
 ```rust
 fn drop_node(node: NodeId) -> Result<()> {
@@ -243,7 +243,7 @@ fn install(manifest: Manifest) -> Result<NodeId> {
         liblob::set_signature(pkg, signature, key.public())?;
     }
     
-    // Commit — package is now persistent
+    // Commit - package is now persistent
     liblob::move(pkg, UNOWNED)?;
     
     Ok(pkg)
@@ -256,7 +256,7 @@ The package's content hash covers all owned files. Signing the package signs the
 
 ```rust
 fn uninstall(pkg: NodeId) -> Result<()> {
-    // One line — cascade handles everything
+    // One line - cascade handles everything
     store.drop_node(pkg)
 }
 ```
@@ -310,12 +310,12 @@ fn verify_closure(node: NodeId, lockfile: &Lockfile) -> Result<bool> {
 }
 ```
 
-Verification is cheap — just compare hashes. The kernel maintains content hashes automatically, so they are always up to date.
+Verification is cheap - just compare hashes. The kernel maintains content hashes automatically, so they are always up to date.
 
 ---
 
 See also:
-- [README.md](README.md) — Overview and quick start
-- [node_store.md](node_store.md) — Content hash computation
-- [security.md](security.md) — Cryptographic signatures
-- [implementation.md](implementation.md) — Testing reproducibility
+- [README.md](README.md) - Overview and quick start
+- [node_store.md](node_store.md) - Content hash computation
+- [security.md](security.md) - Cryptographic signatures
+- [implementation.md](implementation.md) - Testing reproducibility

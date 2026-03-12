@@ -6,7 +6,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 
 ## Testing Strategy
 
-LOBNS takes direct inspiration from SQLite's approach to correctness — 100% branch coverage, every possible failure point tested, a test suite orders of magnitude larger than the library itself. LOB applies the same discipline.
+LOBNS takes direct inspiration from SQLite's approach to correctness - 100% branch coverage, every possible failure point tested, a test suite orders of magnitude larger than the library itself. LOB applies the same discipline.
 
 ### Invariant Checking
 
@@ -198,7 +198,7 @@ mod tests {
 
 LOB is built in phases, with each phase being a complete usable system before the next begins.
 
-### Phase 0 — Proof of Concept on Linux/Windows
+### Phase 0 - Proof of Concept on Linux/Windows
 
 **Goal:** Prove the model is correct and the API is ergonomic before any hardware is involved.
 
@@ -212,7 +212,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 
 **Status:** In progress. The node store is implemented with full invariant checking. Property-based tests are running. Fault injection is implemented.
 
-### Phase 1 — Bare Metal Kernel
+### Phase 1 - Bare Metal Kernel
 
 **Goal:** Boot on target ARM hardware and run the node store in RAM.
 
@@ -229,7 +229,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 3. Node store running in RAM
 4. First syscall (`create_node`) working
 
-### Phase 2 — Interactive System
+### Phase 2 - Interactive System
 
 **Goal:** A demonstrable system with scheduler, shell, and userspace API.
 
@@ -246,7 +246,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 3. Shell querying nodes and displaying results
 4. Process creating nodes and querying them
 
-### Phase 3 — Persistence
+### Phase 3 - Persistence
 
 **Goal:** Crash-consistent writes to storage, boot from persisted node store.
 
@@ -262,7 +262,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 3. Crash recovery working
 4. All fault injection tests passing
 
-### Phase 4 — Native Userspace
+### Phase 4 - Native Userspace
 
 **Goal:** A complete self-hosting system with native applications.
 
@@ -279,7 +279,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 3. Package manager installing packages
 4. Network stack working
 
-### Phase 5 — POSIX Compatibility
+### Phase 5 - POSIX Compatibility
 
 **Goal:** Run legacy software without modification.
 
@@ -299,7 +299,7 @@ LOB is built in phases, with each phase being a complete usable system before th
 
 ## Project Structure
 
-LOB follows a BSD-style monorepo — the entire system in one repository, one build system, one release. LOBNS is not a swappable component as filesystems are in Linux. It is the identity of the OS.
+LOB follows a BSD-style monorepo - the entire system in one repository, one build system, one release. LOBNS is not a swappable component as filesystems are in Linux. It is the identity of the OS.
 
 ```
 lob/
@@ -316,7 +316,7 @@ lob/
   tests/        # integration tests, fault injection, property tests
 ```
 
-Nothing in this structure uses the word "file" except `libposix`, which is exactly where the POSIX concept belongs — quarantined in the compatibility layer, not present in the native system.
+Nothing in this structure uses the word "file" except `libposix`, which is exactly where the POSIX concept belongs - quarantined in the compatibility layer, not present in the native system.
 
 ---
 
@@ -402,7 +402,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 ---
 
 See also:
-- [README.md](README.md) — Overview and quick start
-- [node_store.md](node_store.md) — Core data structures
-- [security.md](security.md) — Security model
-- [reproducibility.md](reproducibility.md) — Testing reproducibility
+- [README.md](README.md) - Overview and quick start
+- [node_store.md](node_store.md) - Core data structures
+- [security.md](security.md) - Security model
+- [reproducibility.md](reproducibility.md) - Testing reproducibility

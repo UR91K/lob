@@ -1,6 +1,6 @@
 # User Experience
 
-The primary user interface for LOB is a flat node browser with no directory tree to navigate — only a search bar and a sidebar of saved views. A second tab renders the same data as a visual graph showing ownership islands, relationships, and provenance chains.
+The primary user interface for LOB is a flat node browser with no directory tree to navigate - only a search bar and a sidebar of saved views. A second tab renders the same data as a visual graph showing ownership islands, relationships, and provenance chains.
 
 ---
 
@@ -23,7 +23,7 @@ type:image,video                 OR within a single attribute
 !type:view                       negation
 ```
 
-The query language addresses both kernel fields and application attrs with identical syntax. The query engine knows which terms map to kernel struct fields and which map to the application attr map — the user never needs to care about this distinction.
+The query language addresses both kernel fields and application attrs with identical syntax. The query engine knows which terms map to kernel struct fields and which map to the application attr map - the user never needs to care about this distinction.
 
 
 ### Query Examples
@@ -62,7 +62,7 @@ created_by_session:abc123
 
 ## Views
 
-A view is a node in LOBNS with `type:view` and a serialized query as its data. Views are first-class — owned, shared, queried like anything else.
+A view is a node in LOBNS with `type:view` and a serialized query as its data. Views are first-class - owned, shared, queried like anything else.
 
 ```rust
 // Create a view
@@ -74,7 +74,7 @@ let view = liblob::create()
     .build()?;
 ```
 
-Views appear in the sidebar. Clicking a view executes its query and displays the results. Views are live — the result set updates automatically as nodes are created, modified, or deleted.
+Views appear in the sidebar. Clicking a view executes its query and displays the results. Views are live - the result set updates automatically as nodes are created, modified, or deleted.
 
 ### Push Notifications
 
@@ -97,24 +97,24 @@ The browser updates in real time with no polling.
 
 ## The Graph View
 
-A second tab renders the same data as a visual graph — nodes as circles, edges as lines, ownership islands as natural clusters.
+A second tab renders the same data as a visual graph - nodes as circles, edges as lines, ownership islands as natural clusters.
 
 ### Visual Encoding
 
-- **Nodes** — circles, sized by data size or refcount
-- **Ownership edges** — solid lines, form tree structures
-- **Ref edges** — dashed lines, show shared access
-- **Weak edges** — dotted lines, show provenance
-- **Node type** — determines color (blue for executables, green for documents, etc.)
+- **Nodes** - circles, sized by data size or refcount
+- **Ownership edges** - solid lines, form tree structures
+- **Ref edges** - dashed lines, show shared access
+- **Weak edges** - dotted lines, show provenance
+- **Node type** - determines color (blue for executables, green for documents, etc.)
 
 ### What the Graph Shows
 
 The graph view makes immediately visible things no conventional OS can show:
 
-- **Blast radius** — what dies if you drop this node?
-- **Survival** — what survives if you uninstall this package?
-- **Provenance chain** — trace any node back to the binary that created it
-- **Anomalous behaviour** — a process holding edges to nodes it has no legitimate reason to access is structurally visible
+- **Blast radius** - what dies if you drop this node?
+- **Survival** - what survives if you uninstall this package?
+- **Provenance chain** - trace any node back to the binary that created it
+- **Anomalous behaviour** - a process holding edges to nodes it has no legitimate reason to access is structurally visible
 
 ### Example: Package Uninstall
 
@@ -140,7 +140,7 @@ The graph shows that the profile survives because it was never owned by the pack
 
 ## Names Are Artificial
 
-In a conventional filesystem, a filename is fundamental — it is how the filesystem locates a node. In LOBNS, identity is the node ID. A name is just an attribute, no different from `type` or `created_at`. There is nothing structurally special about it.
+In a conventional filesystem, a filename is fundamental - it is how the filesystem locates a node. In LOBNS, identity is the node ID. A name is just an attribute, no different from `type` or `created_at`. There is nothing structurally special about it.
 
 Nameless nodes are the natural default, not a special case. A process that needs scratch space creates a nameless node it owns. When the process exits, the cascade reaches the scratch node and it disappears. No name to invent, no `/tmp` collision, no cleanup code required.
 
@@ -191,11 +191,11 @@ The vocabulary deliberately separates itself from POSIX conventions:
 | path | node ID or query |
 | file descriptor | ref handle |
 | inode | node |
-| symlink | — not needed |
-| hardlink | — not needed |
+| symlink | - not needed |
+| hardlink | - not needed |
 | filesystem | LOBNS |
 
-This is not just terminology — it reflects a fundamentally different model. There are no files, no directories, no paths, no mounts. There are only nodes, edges, and queries.
+This is not just terminology - it reflects a fundamentally different model. There are no files, no directories, no paths, no mounts. There are only nodes, edges, and queries.
 
 ---
 
@@ -215,7 +215,7 @@ liblob::ref_mut(doc, |data| {
     data.extend_from_slice(b"Document content...");
 })?;
 
-// Save — add metadata and move to unowned
+// Save - add metadata and move to unowned
 liblob::set_attr(doc, "name", "Q1 Report")?;
 liblob::set_attr(doc, "tag", "work")?;
 liblob::move(doc, UNOWNED)?;
@@ -262,7 +262,7 @@ Views appear in the sidebar and update automatically as nodes are created or mod
 ---
 
 See also:
-- [README.md](README.md) — Overview and quick start
-- [node_store.md](node_store.md) — Node and edge definitions
-- [security.md](security.md) — Query scoping and access control
-- [libposix.md](libposix.md) — POSIX path emulation
+- [README.md](README.md) - Overview and quick start
+- [node_store.md](node_store.md) - Node and edge definitions
+- [security.md](security.md) - Query scoping and access control
+- [libposix.md](libposix.md) - POSIX path emulation

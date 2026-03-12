@@ -18,7 +18,7 @@ init (process node, owned by kernel)
 
 **journal-anchor** and **journal-root** are unowned persistent nodes created at system init. Init holds a Ref to the anchor, the anchor holds a Ref to the root. Neither can be dropped because their refcounts are held by the chain above them. Neither is owned by init, so they are not ephemeral and survive across sessions.
 
-**command-records** are owned by the journal-root and represent a single user command. They store metadata — user, command string, timestamp — and own a linked chain of journal entries representing each individual operation the command performed.
+**command-records** are owned by the journal-root and represent a single user command. They store metadata - user, command string, timestamp - and own a linked chain of journal entries representing each individual operation the command performed.
 
 **journal-entries** are owned by their command-record and stored as a linked list in execution order. Undo replays them in reverse.
 
@@ -43,13 +43,13 @@ This flag is set only by the kernel's internal journal writer. It is not an attr
 
 The journal cannot be tampered with from userspace:
 
-- **journal-anchor** and **journal-root** cannot be dropped — their refcounts are maintained by the chain from init
-- **command-records** and **journal-entries** cannot be dropped or edited — `is_journal_entry` causes the kernel to reject all mutating syscalls on these nodes
-- No node can forge `is_journal_entry` — it is kernel-set and lives outside the attribute system
+- **journal-anchor** and **journal-root** cannot be dropped - their refcounts are maintained by the chain from init
+- **command-records** and **journal-entries** cannot be dropped or edited - `is_journal_entry` causes the kernel to reject all mutating syscalls on these nodes
+- No node can forge `is_journal_entry` - it is kernel-set and lives outside the attribute system
 
 ### Bootstrapping Exception
 
-Journal entry nodes are the one case where a node's creation is not itself journaled. This is a necessary kernel-level exception to avoid infinite regression. All other node operations — including creation of command-record nodes and modification of the journal-root's owned children — are written by the kernel's internal journal path directly, bypassing the normal syscall layer.
+Journal entry nodes are the one case where a node's creation is not itself journaled. This is a necessary kernel-level exception to avoid infinite regression. All other node operations - including creation of command-record nodes and modification of the journal-root's owned children - are written by the kernel's internal journal path directly, bypassing the normal syscall layer.
 
 ### Querying the Journal
 

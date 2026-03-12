@@ -1,4 +1,4 @@
-# libwin32 — Win32 Compatibility Layer for LOB
+# libwin32 - Win32 Compatibility Layer for LOB
 
 libwin32 is a userspace library that translates Win32 API calls into LOBNS operations, allowing unmodified Windows applications to run on LOB. Unlike Wine, which fights against POSIX's filesystem model, libwin32 works with LOB's ownership-based node store, resulting in better performance, fewer edge cases, and more natural semantics.
 
@@ -107,7 +107,7 @@ Win32 supports named kernel objects (mutexes, events, semaphores, file mappings)
 
 ### CreateFile
 
-Win32's `CreateFile()` is notoriously complex — it handles files, directories, devices, pipes, and more. libwin32 translates it to LOBNS operations by:
+Win32's `CreateFile()` is notoriously complex - it handles files, directories, devices, pipes, and more. libwin32 translates it to LOBNS operations by:
 1. Resolving the path to a node ID via indexed query
 2. Handling creation disposition (CREATE_NEW, OPEN_EXISTING, etc.)
 3. Acquiring a Ref (read) or RefMut (write) lease on the node
@@ -225,7 +225,7 @@ This means:
 ## Stability Advantages Over Wine
 
 ### 1. No TOCTOU Races
-Wine is vulnerable to time-of-check-time-of-use races because paths can change between operations. libwin32 resolves once and holds a Ref — the node cannot change while the Ref is held.
+Wine is vulnerable to time-of-check-time-of-use races because paths can change between operations. libwin32 resolves once and holds a Ref - the node cannot change while the Ref is held.
 
 ### 2. Atomic Writes
 Wine applications that crash mid-write can corrupt data files. LOBNS's journal ensures every write is atomic. Crashed apps leave the node store in a consistent state.
@@ -234,7 +234,7 @@ Wine applications that crash mid-write can corrupt data files. LOBNS's journal e
 Wine emulates case-insensitivity on case-sensitive filesystems, leading to subtle bugs. libwin32's case-insensitivity is native to the query system.
 
 ### 4. No Symlink Confusion
-Wine applications can be confused by symlinks that don't exist on Windows. LOBNS has no symlinks at the kernel level — this entire class of bugs doesn't exist.
+Wine applications can be confused by symlinks that don't exist on Windows. LOBNS has no symlinks at the kernel level - this entire class of bugs doesn't exist.
 
 ### 5. Deterministic Cleanup
 Wine relies on Unix process cleanup, which can leak resources. LOBNS's ownership model guarantees cascade deletion when a process dies.
@@ -291,7 +291,7 @@ Wine relies on Unix process cleanup, which can leak resources. LOBNS's ownership
            data: "application-specific data"
 ```
 
-Win32 path `file.txt:Zone.Identifier` resolves to the owned child node with `stream_name:"Zone.Identifier"`. Deleting the file cascades to all streams. Copying the file can optionally copy owned stream nodes. This is cleaner than NTFS's implementation — streams are just nodes, queryable and manageable like anything else.
+Win32 path `file.txt:Zone.Identifier` resolves to the owned child node with `stream_name:"Zone.Identifier"`. Deleting the file cascades to all streams. Copying the file can optionally copy owned stream nodes. This is cleaner than NTFS's implementation - streams are just nodes, queryable and manageable like anything else.
 
 **API Translation:**
 - `CreateFile("file.txt:Zone.Identifier")` → query for node with `stream_name:"Zone.Identifier"` owned by the file node
@@ -322,7 +322,7 @@ Win32 path `file.txt:Zone.Identifier` resolves to the owned child node with `str
 
 When libwin32 encounters a reparse point during path resolution, it reads the `reparse_tag` and dispatches to the appropriate handler. Built-in tags (junctions, symlinks, mount points) are handled by libwin32. Third-party tags can be handled by userspace filter drivers that register handlers.
 
-This is actually simpler than NTFS — reparse points are just nodes with specific attributes. No special filesystem support needed. Filter drivers are just processes that register to handle specific reparse tags.
+This is actually simpler than NTFS - reparse points are just nodes with specific attributes. No special filesystem support needed. Filter drivers are just processes that register to handle specific reparse tags.
 
 **API Translation:**
 - `DeviceIoControl(FSCTL_SET_REPARSE_POINT)` → set `type:reparse_point` and `reparse_tag` attributes
@@ -345,7 +345,7 @@ let oplock = liblob::ref_mut(node)
 // Process B's access proceeds
 ```
 
-The kernel already tracks ref_mut leases and knows when conflicts occur. Oplocks are just a notification mechanism on top of the existing lease system. No separate oplock subsystem needed — it's a natural extension of ref_mut semantics.
+The kernel already tracks ref_mut leases and knows when conflicts occur. Oplocks are just a notification mechanism on top of the existing lease system. No separate oplock subsystem needed - it's a natural extension of ref_mut semantics.
 
 **Oplock Levels:**
 - **Level 1 (Exclusive)** → ref_mut with exclusive notification
@@ -372,7 +372,7 @@ The kernel already tracks ref_mut leases and knows when conflicts occur. Oplocks
   win32_short_name: "PROGRA~2"  // collision, increment suffix
 ```
 
-The short name generation algorithm runs when a node is created with a long name. The result is stored as an attribute. Queries can match against either the long name or short name. No runtime generation, no scanning for collisions — just an indexed attribute.
+The short name generation algorithm runs when a node is created with a long name. The result is stored as an attribute. Queries can match against either the long name or short name. No runtime generation, no scanning for collisions - just an indexed attribute.
 
 **Generation Algorithm:**
 1. Take first 6 characters of name (uppercase, strip invalid chars)
@@ -405,7 +405,7 @@ for node in volume.all_nodes() {
 
 A VSS snapshot is a node that owns cloned copies of all nodes in the volume at a specific point in time. The clones share data with the originals via copy-on-write (a journal optimization). Accessing previous versions is just querying for snapshot nodes and traversing their owned subgraphs.
 
-This is simpler than NTFS's VSS implementation — snapshots are just owned subgraphs of cloned nodes. The journal handles copy-on-write. No separate snapshot subsystem needed.
+This is simpler than NTFS's VSS implementation - snapshots are just owned subgraphs of cloned nodes. The journal handles copy-on-write. No separate snapshot subsystem needed.
 
 **API Translation:**
 - `CreateVssSnapshot()` → create snapshot node, clone volume subgraph
@@ -414,7 +414,7 @@ This is simpler than NTFS's VSS implementation — snapshots are just owned subg
 - Previous Versions UI → enumerate snapshot nodes, show timestamps
 
 **Copy-on-Write Optimization:**
-The journal can detect when a node is cloned and share the underlying data blocks until one copy is modified. This makes snapshots space-efficient without requiring kernel changes — it's just a journal optimization.
+The journal can detect when a node is cloned and share the underlying data blocks until one copy is modified. This makes snapshots space-efficient without requiring kernel changes. it's just a journal optimization.
 
 ---
 
@@ -524,10 +524,10 @@ The plan is to use ReactOS as the primary structural reference, use corkami as o
 
 For each Win32 feature:
 
-1. **Identify the core semantic** — what is this feature actually doing?
-2. **Map it to nodes/edges/attributes** — how does it fit the LOBNS model?
-3. **Implement in libwin32** — translate Win32 API calls to LOBNS operations
-4. **Add kernel support only if necessary** — most features don't need new syscalls
+1. **Identify the core semantic** - what is this feature actually doing?
+2. **Map it to nodes/edges/attributes** - how does it fit the LOBNS model?
+3. **Implement in libwin32** - translate Win32 API calls to LOBNS operations
+4. **Add kernel support only if necessary** - most features don't need new syscalls
 
 The kernel stays simple. The complexity lives in libwin32, which is userspace and can be iterated on quickly. This is the right architecture.
 
@@ -537,11 +537,11 @@ The kernel stays simple. The complexity lives in libwin32, which is userspace an
 
 With this approach, libwin32 is more feasible than Wine because:
 
-- **No fighting the underlying OS** — every feature maps naturally to LOBNS
-- **No separate subsystems** — registry, VSS, oplocks are all just node patterns
-- **Userspace implementation** — most complexity is in libwin32, not the kernel
-- **Incremental progress** — each feature can be added independently
-- **Architectural alignment** — Win32's object model maps to LOBNS naturally
+- **No fighting the underlying OS** - every feature maps naturally to LOBNS
+- **No separate subsystems** - registry, VSS, oplocks are all just node patterns
+- **Userspace implementation** - most complexity is in libwin32, not the kernel
+- **Incremental progress** - each feature can be added independently
+- **Architectural alignment** - Win32's object model maps to LOBNS naturally
 
 Wine's 30-year struggle was fighting POSIX. libwin32 won't have that problem. The struggle will be the sheer API surface size, but that's just work, not architectural friction.
 
@@ -550,13 +550,13 @@ Wine's 30-year struggle was fighting POSIX. libwin32 won't have that problem. Th
 ## Challenges
 
 ### 1. API Surface Size
-Win32 has ~20,000 APIs. Even with LOBNS's advantages, this is years of work. Prioritization is critical — implement the most commonly used APIs first.
+Win32 has ~20,000 APIs. Even with LOBNS's advantages, this is years of work. Prioritization is critical - implement the most commonly used APIs first.
 
 ### 2. Undocumented Behavior
 Many Win32 APIs have undocumented quirks that applications depend on. Wine has spent 30 years discovering these. libwin32 can learn from Wine's experience but will still encounter edge cases.
 
 ### 3. Binary Compatibility
-PE loader, relocations, import tables, TLS callbacks — this is complex and must be perfect. Any bugs here break everything.
+PE loader, relocations, import tables, TLS callbacks - this is complex and must be perfect. Any bugs here break everything.
 
 ### 4. Graphics and DirectX
 Modern Windows applications expect DirectX or OpenGL. This is a massive undertaking. Likely solution: integrate existing projects like DXVK rather than reimplementing.
@@ -574,7 +574,7 @@ Many Windows applications use .NET or COM. Supporting these requires substantial
 
 **Native Features**: Registry, file watching, and handle management are native to LOBNS, not emulated.
 
-**Provenance**: LOBNS's provenance tracking makes debugging easier. You can query which process created which nodes, which binary was running, and what DLLs were loaded.
+**Provenance**: LOBNS's provenance tracking makes debugging easier. We can query which process created which nodes, which binary was running, and what DLLs were loaded.
 
 **Security**: LOBNS's ownership model provides structural access control. Win32 security descriptors are emulated for compatibility, but the real enforcement is in the graph.
 
@@ -588,4 +588,4 @@ Many Windows applications use .NET or COM. Supporting these requires substantial
 
 **Year 20**: Mature compatibility layer. libwin32 is a viable alternative to Wine, with better performance and fewer bugs for applications that work.
 
-libwin32 will never reach 100% compatibility — Wine hasn't after 30 years. But the architectural advantages mean that applications that do work will work better than on Wine.
+libwin32 will never reach 100% compatibility - Wine hasn't after 30 years. But the architectural advantages mean that applications that do work will work better than on Wine.

@@ -1,4 +1,4 @@
-# libposix — POSIX Compatibility Layer
+# libposix - POSIX Compatibility Layer
 
 LOB ships `libposix`, a userspace library that translates POSIX calls into LOBNS operations. Legacy programs compiled against `musl` and `libposix` run without modification. The kernel does not know or care about POSIX.
 
@@ -6,7 +6,7 @@ LOB ships `libposix`, a userspace library that translates POSIX calls into LOBNS
 
 ## Design Philosophy
 
-libposix is a pure translation layer. It maintains no kernel state. All POSIX semantics — paths, directories, file descriptors, permissions — are implemented entirely in userspace by mapping them onto LOBNS primitives.
+libposix is a pure translation layer. It maintains no kernel state. All POSIX semantics - paths, directories, file descriptors, permissions - are implemented entirely in userspace by mapping them onto LOBNS primitives.
 
 The kernel provides nodes, edges, and queries. libposix provides the illusion of a hierarchical filesystem on top of that substrate.
 
@@ -14,7 +14,7 @@ The kernel provides nodes, edges, and queries. libposix provides the illusion of
 
 ## How Hierarchy Is Simulated
 
-A traditional directory tree is a specific pattern of ownership edges maintained entirely within libposix. A directory is a node with `attr("type", "directory")` owning its children. Path resolution is a query traversal — no new kernel primitives required.
+A traditional directory tree is a specific pattern of ownership edges maintained entirely within libposix. A directory is a node with `attr("type", "directory")` owning its children. Path resolution is a query traversal - no new kernel primitives required.
 
 ```rust
 // A directory is just a node that owns other nodes
@@ -74,9 +74,9 @@ Hierarchy is a query pattern maintained by libposix, not a property of LOBNS its
 
 ## Symlinks and Hardlinks
 
-Symlinks and hardlinks are solutions to problems LOBNS does not have. Hardlinks exist because inodes can only live in one directory — in LOBNS location is irrelevant, a node is found by query. Symlinks exist because hardlinks cannot cross filesystem boundaries — in LOBNS there is one store and no concept of location.
+Symlinks and hardlinks are solutions to problems LOBNS does not have. Hardlinks exist because inodes can only live in one directory - in LOBNS location is irrelevant, a node is found by query. Symlinks exist because hardlinks cannot cross filesystem boundaries - in LOBNS there is one store and no concept of location.
 
-The sharp edges these primitives introduce — dangling symlinks, symlink loops, TOCTOU security races, silent survival after `rm` — are entirely absent from LOBNS. They exist in `libposix` as a thin emulation layer for legacy software and nowhere else.
+The sharp edges these primitives introduce - dangling symlinks, symlink loops, TOCTOU security races, silent survival after `rm` - are entirely absent from LOBNS. They exist in `libposix` as a thin emulation layer for legacy software and nowhere else.
 
 ### Symlink Emulation
 
@@ -163,7 +163,7 @@ enum Lease {
 }
 ```
 
-The fd table is maintained entirely in userspace by libposix. The kernel knows nothing about file descriptors — it only knows about Ref and RefMut leases.
+The fd table is maintained entirely in userspace by libposix. The kernel knows nothing about file descriptors - it only knows about Ref and RefMut leases.
 
 ---
 
@@ -178,7 +178,7 @@ posix_uid:  1000
 posix_gid:  1000
 ```
 
-libposix checks these attributes before granting access. The kernel does not enforce POSIX permissions — it enforces the ownership model. libposix translates POSIX permission checks into decisions about whether to acquire a Ref or RefMut lease.
+libposix checks these attributes before granting access. The kernel does not enforce POSIX permissions - it enforces the ownership model. libposix translates POSIX permission checks into decisions about whether to acquire a Ref or RefMut lease.
 
 This means POSIX permissions are advisory for legacy software. Native LOB applications ignore them entirely and rely on the structural access control of the capability model.
 
@@ -234,12 +234,12 @@ A POSIX program compiled against musl and libposix runs without modification. It
 
 libposix does not emulate:
 
-- **Mount points** — there is one node store, no concept of mounting
-- **Device files** — devices are nodes with `type:device`, accessed directly
-- **Special filesystems** (`/proc`, `/sys`) — replaced by queries (`type:process`, `type:kernel_stat`)
-- **Filesystem-specific features** (ext4 extended attributes, btrfs snapshots) — LOBNS has its own primitives
+- **Mount points** - there is one node store, no concept of mounting
+- **Device files** - devices are nodes with `type:device`, accessed directly
+- **Special filesystems** (`/proc`, `/sys`) - replaced by queries (`type:process`, `type:kernel_stat`)
+- **Filesystem-specific features** (ext4 extended attributes, btrfs snapshots) - LOBNS has its own primitives
 
-These are not limitations — they are features LOBNS replaces with better primitives.
+These are not limitations - they are features LOBNS replaces with better primitives.
 
 ---
 
@@ -304,12 +304,12 @@ content_hash: [...]
 data: [...]
 ```
 
-The node browser shows it. Queries find it. Native applications can ref it. The POSIX layer is just a view — the underlying data is always LOBNS nodes.
+The node browser shows it. Queries find it. Native applications can ref it. The POSIX layer is just a view - the underlying data is always LOBNS nodes.
 
 ---
 
 See also:
-- [README.md](README.md) — Overview and quick start
-- [node_store.md](node_store.md) — Node and edge definitions
-- [user_experience.md](user_experience.md) — Native query interface
-- [implementation.md](implementation.md) — Development phases
+- [README.md](README.md) - Overview and quick start
+- [node_store.md](node_store.md) - Node and edge definitions
+- [user_experience.md](user_experience.md) - Native query interface
+- [implementation.md](implementation.md) - Development phases

@@ -1,7 +1,7 @@
 # lob-shell Cookbook
 
-> **See also:** [Quick Reference](./reference.md) — all commands and flags  
-> **See also:** [Concepts](./concepts.md) — ownership, edge types, node lifecycle
+> **See also:** [Quick Reference](./reference.md) - all commands and flags  
+> **See also:** [Concepts](./concepts.md) - ownership, edge types, node lifecycle
 
 ---
 

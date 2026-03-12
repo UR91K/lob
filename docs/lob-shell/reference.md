@@ -1,7 +1,7 @@
 # lob-shell Quick Reference
 
-> **See also:** [Concepts](./lob-shell-concepts.md) — ownership, edge types, node lifecycle  
-> **See also:** [Cookbook](./lob-shell-cookbook.md) — piping, scripting, real-world workflows
+> **See also:** [Concepts](./lob-shell-concepts.md) - ownership, edge types, node lifecycle  
+> **See also:** [Cookbook](./lob-shell-cookbook.md) - piping, scripting, real-world workflows
 
 ---
 
@@ -13,13 +13,13 @@
 | `@12844` | Exact node ID |
 | `@firefox` | Resolve by `name` attribute |
 | `@firefox:package` | Resolve by `name` and `type` |
-| `unowned` | Special target — no owner (persistent) |
+| `unowned` | Special target - no owner (persistent) |
 
 If a name resolves to multiple nodes, the shell prompts inline disambiguation. Type hints (`:package`, `:process`) narrow resolution before prompting.
 
 ---
 
-## `qr` / `query` — Query the Node Store
+## `qr` / `query` - Query the Node Store
 
 ```
 qr [flags] [traversal]
@@ -59,7 +59,7 @@ qr [flags] [traversal]
 
 ---
 
-## `lqr` — Local Query (Current Context)
+## `lqr` - Local Query (Current Context)
 
 Identical to `qr` but scoped to the current result set. Errors if no context exists.
 
@@ -93,9 +93,9 @@ Appended to any command that produces a result set.
 
 | Operator | Meaning |
 |----------|---------|
-| `\|.o` | Union — add owned children to current set |
-| `&.o` | Intersection — keep only nodes that own something |
-| `-.o` | Difference — remove nodes that own something |
+| `\|.o` | Union - add owned children to current set |
+| `&.o` | Intersection - keep only nodes that own something |
+| `-.o` | Difference - remove nodes that own something |
 
 ---
 
@@ -114,7 +114,7 @@ All aliases accept the same flags as `qr` (e.g. `mine -sid`, `procs -iu`).
 
 ## Node Commands
 
-### `show` — Display Node Details
+### `show` - Display Node Details
 
 ```
 show <ref>
@@ -122,7 +122,7 @@ show <ref>
 
 Shows ID, owner, refcount, content hash, timestamps, all attributes, and edges.
 
-### `dump` — Display Node Data
+### `dump` - Display Node Data
 
 ```
 dump <ref>
@@ -130,7 +130,7 @@ dump <ref>
 
 Read-only. Internally creates a temporary Ref, reads data, drops Ref.
 
-### `edit` — Edit Node with Exclusive Lease
+### `edit` - Edit Node with Exclusive Lease
 
 ```
 edit <ref>
@@ -138,7 +138,7 @@ edit <ref>
 
 Opens `$EDITOR`. Acquires exclusive write lease (`ref_mut`). Errors if another write lease is active.
 
-### `new` — Create Node
+### `new` - Create Node
 
 ```
 new [-a key:value,...]
@@ -150,7 +150,7 @@ Creates a node with `data:utf8` by default.
 new -a name:todo
 ```
 
-### `clone` — Duplicate Node
+### `clone` - Duplicate Node
 
 ```
 clone <source> [<owner>]
@@ -165,7 +165,7 @@ clone 1 @9281        # owned by @9281
 clone 4 2            # result 4, owned by result 2
 ```
 
-### `drop` — Release Ownership
+### `drop` - Release Ownership
 
 ```
 drop [-f] <ref> [<ref>...]
@@ -181,7 +181,7 @@ drop 1 2 3           # multiple, one confirmation
 
 Errors if refcount > 0.
 
-### `move`, `mv` — Transfer Ownership
+### `move`, `mv` - Transfer Ownership
 
 ```
 mv <node> <new-owner>
@@ -200,7 +200,7 @@ This has noticably different behaviour from the `mv` command in a Unix environme
 
 ## Edge Commands
 
-### `edges` — Show Edges
+### `edges` - Show Edges
 
 ```
 edges <ref> [-d in|out] [-o] [-r] [-w]
@@ -213,7 +213,7 @@ edges <ref> [-d in|out] [-o] [-r] [-w]
 | `-r` | Ref edges only |
 | `-w` | Weak edges only |
 
-### `ref` — Create Ref Edge (Borrow)
+### `ref` - Create Ref Edge (Borrow)
 
 ```
 ref <from> <to>
@@ -221,7 +221,7 @@ ref <from> <to>
 
 Increments refcount on target. Target cannot be dropped while refcount > 0.
 
-### `weak` — Create Weak Edge
+### `weak` - Create Weak Edge
 
 ```
 weak <from> <to> [-a key:value,...]
@@ -229,7 +229,7 @@ weak <from> <to> [-a key:value,...]
 
 Does not affect refcount. If target is dropped, edge becomes a tombstone.
 
-### `upgrade`, `up` — Promote Weak to Ref
+### `upgrade`, `up` - Promote Weak to Ref
 
 ```
 up <from> <to>
@@ -237,7 +237,7 @@ up <from> <to>
 
 Fails if target is a tombstone.
 
-### `unlink`, `ul` — Remove Edge
+### `unlink`, `ul` - Remove Edge
 
 ```
 ul [-t ref|weak|own] <from> <to>
@@ -247,7 +247,7 @@ ul [-t ref|weak|own] <from> <to>
 
 ## Attribute Commands
 
-### `attr` — Show or Set Attributes
+### `attr` - Show or Set Attributes
 
 ```
 attr <ref> [key[:value],...]
@@ -261,7 +261,7 @@ attr 1 tag:urgent,priority:1  # set multiple
 attr 1 tag:                   # remove attribute
 ```
 
-### `tag` / `untag` — Shorthand Tag Operations
+### `tag` / `untag` - Shorthand Tag Operations
 
 ```
 tag <tag-name> <ref> [<ref>...]
@@ -272,7 +272,7 @@ untag <tag-name> <ref> [<ref>...]
 
 ## Provenance
 
-### `trace` — Show Creation Chain
+### `trace` - Show Creation Chain
 
 ```
 trace <ref>

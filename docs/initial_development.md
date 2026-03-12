@@ -47,7 +47,7 @@ The node browser built on top of the library serves multiple purposes simultaneo
 - Proves the query API is actually ergonomic to use
 - Surfaces API design mistakes early, before they're carved into a kernel syscall interface
 - Gives I something visual and demonstrable
-- Tests the index performance with realistic node counts — load 3.7 million synthetic nodes and see if queries feel instant
+- Tests the index performance with realistic node counts - load 3.7 million synthetic nodes and see if queries feel instant
 - Is genuinely useful as a standalone tool even before LOB the OS exists
 
 For the UI layer, your existing experience with egui makes this a natural fit. egui is immediate mode, straightforward for this kind of tool, and I already know it. The graph view can use something like `egui_graphs` or I can roll a basic force-directed layout yourself with `wgpu` given your experience there.
