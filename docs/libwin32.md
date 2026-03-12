@@ -434,6 +434,94 @@ None of these require new kernel primitives. They're all patterns built on top o
 
 ## Implementation Strategy
 
+### Required APIs
+
+The 80/20 split of supported applications vs required APIs is probably more like 95/5 in practice. The vast majority of applications touch a surprisingly small core.
+
+**The essential core**
+
+Almost every Windows application uses these, and getting them right unlocks a huge portion of the catalogue:
+
+- `kernel32` / `kernelbase` - file I/O, memory allocation, process/thread creation, synchronization primitives, string handling. This is the floor everything else stands on.
+- `ntdll` - the actual NT syscall layer underneath kernel32. Worth implementing first since kernel32 just wraps it. ReactOS's ntdll is the best reference here.
+- `msvcrt` / `ucrt` - the C runtime. An enormous amount of software is just C or C++ and only needs the CRT plus a thin kernel32 layer on top.
+- `advapi32` - registry, basic security APIs, service control. Registry alone unlocks a huge number of applications that store config there.
+
+That's probably 60-70% of applications.
+
+**The second tier**
+
+- `user32` + `gdi32` - windowing and basic 2D graphics. Needed for any GUI application, but the subset actually used by most apps is much smaller than the full API surface. Most apps use a UI framework (Qt, wxWidgets, Electron, .NET WinForms) that itself uses a limited subset of user32/gdi32.
+- `comctl32` - common controls (buttons, listviews, treeviews). Most native Windows UIs use these.
+- `shell32` - file open/save dialogs, the shell namespace. A lot of apps just need `SHGetFolderPath`, `ShellExecute`, and the common dialogs.
+- `ws2_32` - Winsock. Any networked application needs this, and it maps very cleanly to BSD sockets semantics so it's relatively straightforward to implement.
+
+Adding these probably gets us to 85-90% of applications at least launching.
+
+**The long tail that looks big but isn't**
+
+A lot of the 20,000 API number comes from:
+
+- Deprecated APIs that forward to newer ones - implementing the new one gets us both
+- Unicode/ANSI pairs - every API has a `W` and `A` variant, but `A` just converts and calls `W`
+- Rarely-used subsystems - tape backup APIs, obsolete networking stacks, legacy multimedia APIs from the Win95 era
+
+Wine actually tracks call frequency in their bug reports and appdb. The pattern is consistent - a small number of DLLs account for nearly all real-world usage.
+
+**What to explicitly defer**
+
+- `ole32` / `COM` - important eventually but a massive undertaking on its own. Defer until the core is solid.
+- `d3d` / DirectX - defer in favour of DXVK once the PE loader works
+- `msi` - the installer format. Important for getting software installed but complex. Early on we could require applications to be pre-installed or use simpler installers.
+- Printing - `winspool`, GDI printing path. Low value, high complexity, defer indefinitely.
+- `directshow` / `mf` (Media Foundation) - complex media pipeline APIs. Defer unless we specifically want media playback.
+- `wbem` / WMI - management infrastructure, mostly used by system tools and malware. Low application value.
+
+**A concrete suggested order**
+
+1. `ntdll` core - memory, processes, threads, basic file I/O at the NT layer
+2. `msvcrt` / `ucrt` - gets us pure C/C++ console applications immediately
+3. `kernel32` over ntdll - file I/O, synchronization, heap
+4. `advapi32` registry - unlocks configuration for almost everything
+5. `ws2_32` - networked CLI tools, a huge category
+6. `user32` / `gdi32` subset - enough to open a window and handle messages
+7. `comctl32` + `shell32` subset - native GUI apps
+8. DXVK integration - games and DirectX apps
+
+By step 5 we can probably run a substantial portion of CLI and server software. By step 7 most native GUI applications at least launch. DXVK then opens the game catalogue.
+
+The ReactOS source is useful here too. Their implementation prioritises the same core APIs and their commit history reflects what was needed to get real software running at each stage.
+
+### Reference resources
+
+**ReactOS**
+
+Their PE loader (`ntdll/ldr`) is probably the best open reference for a correct, well-documented implementation. It's a clean-room reimplementation targeting actual NT semantics rather than POSIX translation, so the code structure maps directly to what we'd want for LOB. Key files are `dll/ntdll/ldr/ldrutils.c` and `ldrpe.c`. The code is readable and well-commented compared to Wine's equivalent.
+
+**Corkami**
+
+Not a loader implementation but possibly the most valuable reference for correctness. Ange Albertini's corkami project is an exhaustive collection of PE edge cases, malformed binaries, and obscure format behaviours that real applications trigger. It's the closest thing to a PE format test suite that exists. Wine and ReactOS both have bugs that corkami exposes. Worth treating as a required reading and test corpus rather than optional.
+
+**Windows PE/COFF specification**
+
+Microsoft's official PE/COFF spec is on MSDN and is actually reasonably complete for the format itself. The gaps are in loader behaviour - what happens with malformed inputs, what order relocations are applied, how imports are resolved when there are circular dependencies. That's where ReactOS and corkami fill in.
+
+**LLVM's PE handling**
+
+LLVM has a well-written PE/COFF parser in `llvm/lib/Object/COFFObjectFile.cpp`. It's not a loader but it's high quality code for parsing the format and handles a lot of edge cases cleanly. Good reference for the parsing layer specifically.
+
+**PE-bear and PE-sieve**
+
+These are analysis tools rather than loaders, but their source (both on GitHub) shows careful handling of the format for forensic purposes, which means they handle malformed and adversarial inputs well. Useful for the defensive/correctness side of the parser.
+
+**The one thing none of these fully document**
+
+TLS callbacks are the area where every loader implementation has subtle bugs and the references are weakest. TLS callbacks run before the entry point and the order relative to dependency initialisation has undocumented quirks that a non-trivial number of applications depend on. Wine's bug tracker has years of TLS-related issues worth reading through. This is one area where we'll likely need to test against real applications rather than relying on any written reference.
+
+The plan is to use ReactOS as the primary structural reference, use corkami as our test suite, and keep the MSDN spec open for format details. That combination covers the documented behaviour, the correct NT semantics, and the edge cases that will break real applications.
+
+### Per feature strategy
+
 For each Win32 feature:
 
 1. **Identify the core semantic** — what is this feature actually doing?
