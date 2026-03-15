@@ -1,6 +1,6 @@
 # LOB Shell Design
 
-The LOB shell (lob-shell) is a query-first interface to the node store. There is no "current directory" - instead, commands operate on query results, node IDs, or the entire system. When a query is made, the last query is stored as the current context (similar to being in a directory) and the list numbers are resolved to actual ids when referenced. 
+The LOB shell (known simply as `shell`) is a query-first interface to the node store. There is no "current directory" - instead, commands operate on query results, node IDs, or the entire system. When a query is made, the last query is stored as the current context (similar to being in a directory) and the list numbers are resolved to actual ids when referenced. 
 
 ---
 
@@ -296,12 +296,12 @@ Alias for `qr -u self` - shows nodes you created:
 alice (lobbox1) >> mine
 1 draft         | document utf8 markdown | 2.4KB
 2 notes         | document utf8 markdown | 8.1KB
-3 lob-shell-cfg | config utf8 toml       | 1.2KB
+3 shell-config  | config utf8 toml       | 1.2KB
 
 alice (lobbox1) >> mine -sid
 1 draft@12844         | document utf8 markdown | 2.4KB
 2 notes@12845         | document utf8 markdown | 8.1KB
-3 lob-shell-cfg@12846 | config utf8 toml       | 1.2KB
+3 shell-config@12846  | config utf8 toml       | 1.2KB
 ```
 
 ### `recent`
@@ -334,13 +334,13 @@ Alias for `qr -a type:process`
 alice (lobbox1) >> procs
 1 vim            | process | rc:1 | started 2h ago
 2 firefox        | process | rc:3 | started 4h ago
-3 lob-shell      | process | rc:0 | started 6h ago
+3 shell          | process | rc:0 | started 6h ago
 
 # With canonical IDs
 alice (lobbox1) >> procs -sid
 1 vim@9284       | process | rc:1 | started 2h ago
 2 firefox@9285   | process | rc:3 | started 4h ago
-3 lob-shell@9286 | process | rc:0 | started 6h ago
+3 shell@9286     | process | rc:0 | started 6h ago
 
 # Terminate a process (just drop)
 alice (lobbox1) >> drop 2
@@ -819,7 +819,7 @@ Host: Latitude E7450
 Kernel: lob-kernel 2.4-amd64
 Uptime: 6 hours, 31 mins
 Packages: 2255 (plob)
-Shell: lob-shell 1.9
+Shell: shell 1.9
 Display (BOE05F3): 1366x768 in 14 in, 60 Hz [Built]
 DE: lob-desktop 1.20
 Terminal: lob-terminal 1.1.5
@@ -840,7 +840,7 @@ Locale: en_US.UTF-8
 The shell can execute scripts with full access to all commands:
 
 ```shell
-#!lob-shell
+#!shell
 
 # backup-documents
 # Backs up all documents to archive node
@@ -864,9 +864,9 @@ alice (lobbox1) >> exec backup-documents
 Shell configuration is itself a node:
 
 ```shell
-alice (lobbox1) >> edit @lob-shell-cfg
+alice (lobbox1) >> edit @shell-config
 
-# lob-shell configuration
+# shell configuration
 editor = "vim"
 pager = "less"
 confirm_delete = true

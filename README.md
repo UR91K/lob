@@ -182,7 +182,7 @@ LOB is implemented in Rust because its type system is isomorphic to the ownershi
 
 LOB is currently in Phase 0 (proof of concept on Linux/Windows.) The LOBNS node store is implemented as a pure `no_std` library with exhaustive testing (property-based fuzzing, fault injection, 100% branch coverage).
 
-Under active development: node browser, lob-shell
+Under active development: node browser, shell
 
 See [implementation.md](docs/implementation.md) for the full roadmap.
 
