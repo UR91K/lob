@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "lobns",
+]
+resolver = "2"
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+authors = ["Jude Fanner"]
+license = "BSD-2-Clause"
+
+# Workspace-wide settings can go here
+[profile.release]
+opt-level = 3
+lto = true
